@@ -1,12 +1,15 @@
 import unittest
+
 # import argparse
 import pytest
+
 
 def pytest_addoption(parser):
     # parser.addoption("--enable-debug", action="store_true", default=False, help="debug tests")
     # parser.addoption("--run-slow", action="store_true", default=False, help="run slow tests")
     # parser.addoption("--run-local", action="store_true", default=False, help="run slow tests")
     pass
+
 
 def pytest_collection_modifyitems(config, items):
     # skip_slow = pytest.mark.skip(reason="need --runslow option to run")
@@ -20,6 +23,7 @@ def pytest_collection_modifyitems(config, items):
     #         if "local" in item.keywords:
     #             item.add_marker(skip_local)
     pass
+
 
 @pytest.fixture(scope="class")
 def debug(request):

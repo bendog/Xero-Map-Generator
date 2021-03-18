@@ -1,15 +1,31 @@
-
 import re
 from copy import copy
 from six import text_type
-from traitlets import (Any, Bool, Float, Integer, List, TraitType, Type,
-                       Unicode, Union, getmembers, validate)
+from traitlets import (
+    Any,
+    Bool,
+    Float,
+    Integer,
+    List,
+    TraitType,
+    Type,
+    Unicode,
+    Union,
+    getmembers,
+    validate,
+)
 from traitlets.config.configurable import Configurable
-from traitlets.config.loader import (ArgumentError, Config, ConfigFileNotFound,
-                                     JSONFileConfigLoader,
-                                     KVArgParseConfigLoader, LazyConfigValue,
-                                     PyFileConfigLoader)
+from traitlets.config.loader import (
+    ArgumentError,
+    Config,
+    ConfigFileNotFound,
+    JSONFileConfigLoader,
+    KVArgParseConfigLoader,
+    LazyConfigValue,
+    PyFileConfigLoader,
+)
 from builtins import super
+
 
 class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
     """ Extension of KVArgParseConfigLoader to handle complex argument parsing. """
@@ -56,6 +72,7 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             }
             ```
         """
+
         def process_super_extensions(things, name_singular, value_key):
             setattr(self, "%s_extensions" % name_singular, {})
             if not things:
@@ -63,7 +80,8 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             super_things = {}
             for thing, values in things.items():
                 assert value_key in values, "%s values must contain a %s" % (
-                    name_singular, value_key
+                    name_singular,
+                    value_key,
                 )
                 super_things[thing] = values.pop(value_key)
                 if values:
@@ -71,34 +89,29 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             return super_things
 
         super_kwargs.update(
-            aliases=process_super_extensions(aliases, 'alias', 'trait'),
-            flags=process_super_extensions(flags, 'flag', 'value')
+            aliases=process_super_extensions(aliases, "alias", "trait"),
+            flags=process_super_extensions(flags, "flag", "value"),
         )
 
         super().__init__(*super_args, **super_kwargs)
 
     def _get_add_args_kwargs(self, thing_extensions, key, default_add_kwargs):
-        add_args = thing_extensions.get(key, {}).get('add_args', [])
+        add_args = thing_extensions.get(key, {}).get("add_args", [])
         if not add_args:
-            add_args = ['-'+key] if len(key) is 1 else ['--'+key]
+            add_args = ["-" + key] if len(key) is 1 else ["--" + key]
         add_kwargs = copy(default_add_kwargs)
-        add_kwargs.update(
-            thing_extensions.get(key, {}).get('add_kwargs', {})
-        )
+        add_kwargs.update(thing_extensions.get(key, {}).get("add_kwargs", {}))
         return add_args, add_kwargs
 
     def _add_alias_arguments(self, aliases, flags):
-        for key,value in aliases.items():
-            default_add_kwargs = {
-                'dest': value,
-                'type': text_type
-            }
+        for key, value in aliases.items():
+            default_add_kwargs = {"dest": value, "type": text_type}
             add_args, add_kwargs = self._get_add_args_kwargs(
                 self.alias_extensions, key, default_add_kwargs
             )
             if key in flags:
                 # flags
-                add_kwargs['nargs'] = '?'
+                add_kwargs["nargs"] = "?"
             self.parser.add_argument(*add_args, **add_kwargs)
 
     def _add_flag_arguments(self, flags):
@@ -108,10 +121,10 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
                 self.alias_flags[self.aliases[key]] = value
                 continue
             default_add_kwargs = {
-                'dest': '_flags',
-                'action': 'append_const',
-                'const': value,
-                'help': help
+                "dest": "_flags",
+                "action": "append_const",
+                "const": value,
+                "help": help,
             }
             add_args, add_kwargs = self._get_add_args_kwargs(
                 self.flag_extensions, key, default_add_kwargs
@@ -134,26 +147,28 @@ class RichConfigurable(Configurable):
     # TODO: extra methods for auto generating add_args
     @classmethod
     def trait_argparse_aliases(cls):
-        traits = dict([memb for memb in getmembers(cls) if
-                     isinstance(memb[1], TraitType)])
+        traits = dict(
+            [memb for memb in getmembers(cls) if isinstance(memb[1], TraitType)]
+        )
         aliases = {}
         for key, trait_obj in traits.items():
-            if key in ['config', 'parent']:
+            if key in ["config", "parent"]:
                 continue
             alias_dict = {}
             trait_meta = copy(trait_obj.metadata)
-            alias_key = trait_meta.pop('switch', re.sub('_', '-', key))
-            alias_dict['add_kwargs'] = trait_meta
+            alias_key = trait_meta.pop("switch", re.sub("_", "-", key))
+            alias_dict["add_kwargs"] = trait_meta
             # if hasattr(trait_obj, 'default_value'):
-            if trait_obj.default_value != '':
-                alias_dict['add_kwargs'].update({
-                    'default':text_type(trait_obj.default_value)
-                })
-            alias_dict['trait'] = "%s.%s" % (cls.__name__, key)
-            alias_dict['section'] = cls.__name__.lower()
+            if trait_obj.default_value != "":
+                alias_dict["add_kwargs"].update(
+                    {"default": text_type(trait_obj.default_value)}
+                )
+            alias_dict["trait"] = "%s.%s" % (cls.__name__, key)
+            alias_dict["section"] = cls.__name__.lower()
 
             aliases[alias_key] = alias_dict
         return aliases
+
 
 class RichConfig(Config):
     def __init__(self, *args, **kwargs):
