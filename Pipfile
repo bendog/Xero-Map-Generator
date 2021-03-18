@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+traitlets = "~=4.3.2"
+coloredlogs = "~=10.0"
+tqdm = "~=4.23.4"
+tabulate = "~=0.8.2"
+pyxero = "~=0.9.1"
+
+[dev-packages]
+mock = "*"
+pytest-cov = "<=2.6.0"
+httmock = "*"
+codecov = "*"
+
+[requires]
+python_version = "3.8"
